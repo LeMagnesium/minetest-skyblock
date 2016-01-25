@@ -60,10 +60,10 @@ skyblock.levels[level].feats = {
 		placenode = {'default:fence_wood'},
 	},
 	{
-		name = 'build a structure using 100 Gravel',
+		name = 'build a structure using 50 Gravel',
 		hint = 'default:gravel',
 		feat = 'place_gravel', 
-		count = 100, 
+		count = 50, 
 		reward = 'stairs:stair_cobble 4',
 		placenode = {'default:gravel'},
 	},
@@ -178,7 +178,7 @@ skyblock.levels[level].reward_feat = function(player_name, feat)
 				break
 			end
 		end
-		minetest.add_node({x=pos.x,y=pos.y+y_up,z=pos.z}, {name='default:water_source'})
+		minetest.set_node({x=pos.x,y=pos.y+y_up,z=pos.z}, {name='default:water_source'})
 		return true
 	end
 

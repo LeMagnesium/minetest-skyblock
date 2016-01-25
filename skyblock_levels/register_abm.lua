@@ -8,6 +8,20 @@ License: GPLv3
 
 ]]--
 
+skyblock.flora = {
+	'default:junglegrass',
+	'default:grass_1',
+	'flowers:dandelion_white',
+	'flowers:dandelion_yellow',
+	'flowers:geranium',
+	'flowers:rose',
+	'flowers:tulip',
+	'flowers:viola'
+}
+
+function skyblock.register_flora(node)
+	table.insert(skyblock.flora, node)
+end
 
 -- flora spawns on dirt_with_grass
 minetest.register_abm({
@@ -22,42 +36,32 @@ minetest.register_abm({
 			return
 		end
 
-		-- check for nearby
-		if minetest.env:find_node_near(pos, 2, {'group:flora'}) ~= nil then
+		-- Check for nearby Monsarno Round-Down
+		if minetest.find_node_near(pos, 5, 'skyblock:round_down') ~= nil then
 			return
 		end
 
-		if minetest.env:get_node(pos).name == 'air' then
-			local rand = math.random(1,8);
-			local node
-			if rand==1 then
-				node = 'default:junglegrass'
-			elseif rand==2 then
-				node = 'default:grass_1'
-			elseif rand==3 then
-				node = 'flowers:dandelion_white'
-			elseif rand==4 then
-				node = 'flowers:dandelion_yellow'
-			elseif rand==5 then
-				node = 'flowers:geranium'
-			elseif rand==6 then
-				node = 'flowers:rose'
-			elseif rand==7 then
-				node = 'flowers:tulip'
-			elseif rand==8 then
-				node = 'flowers:viola'
-			end
-			minetest.env:set_node(pos, {name=node})
+		-- check for nearby flora
+		if minetest.find_node_near(pos, 2, {'group:flora'}) ~= nil then
+			return
+		end
+
+		if minetest.get_node(pos).name == 'air' then
+			local node = skyblock.flora[math.random(1,#skyblock.flora)]
+			minetest.set_node(pos, {name=node})
 		end
 	end
 })
 
 -- remove bones
-minetest.register_abm({
-	nodenames = {'bones:bones'},
-	interval = 1,
-	chance = 1,
-	action = function(pos, node)
-		minetest.env:remove_node(pos)
-	end,
-})
+
+if not minetest.setting_getbool("disable_skyblock_remove_bones_abm") then
+	minetest.register_abm({
+		nodenames = {'bones:bones'},
+		interval = 1,
+		chance = 1,
+		action = function(pos, node)
+			minetest.remove_node(pos)
+		end
+	})
+end

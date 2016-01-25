@@ -65,6 +65,7 @@ function skyblock.feats.update(player_name)
 	if info.count==info.total then
 		--minetest.chat_send_player(player_name, 'You completed level '..level)
 		minetest.chat_send_all(player_name..' completed level '..level)
+		if irc then irc:say(player_name .. ' completed level ' .. level) end
 		for _, ref in pairs(minetest.get_connected_players()) do
 			if not (ref:get_player_name() == player_name) then
 				minetest.sound_play("skyblock_finish_other", {
@@ -90,7 +91,7 @@ function skyblock.feats.update(player_name)
 	if player then
 		player:set_inventory_formspec(info.formspec)
 	end
-	local meta = minetest.env:get_meta(pos)
+	local meta = minetest.get_meta(pos)
 	meta:set_string('formspec', info.formspec_quest)
 	meta:set_string('infotext', info.infotext)
 end
@@ -122,6 +123,7 @@ function skyblock.feats.add(level,player_name,feat)
 		local rewarded = skyblock.levels[level].reward_feat(player_name,feat)
 		if rewarded then
 			minetest.chat_send_all(player_name..' completed the quest "'..feat..'" on level '..level)
+			if irc then irc:say(player_name .. ' completed the quest "' .. feat .. '" on level ' .. level) end
 			minetest.sound_play("skyblock_finish_quest", {
 				to_player = player_name,
 				gain = 1.0,
@@ -141,6 +143,7 @@ function skyblock.feats.set(level,player_name,feat,value)
 		local rewarded = skyblock.levels[level].reward_feat(player_name,feat)
 		if rewarded then
 			minetest.chat_send_all(player_name..' completed the quest "'..feat..'" on level '..level)
+			if irc then irc:say(player_name..' completed the quest "'..feat..'" on level '..level) end
 			minetest.sound_play("skyblock_finish_quest", {
 				to_player = player_name,
 				gain = 1.0,
@@ -226,7 +229,7 @@ end
 for _,v in ipairs({'doors:door_wood','doors:door_glass','doors:door_steel','doors:door_obsidian_glass'}) do
 	on_place(v,1);
 end
-for _,v in ipairs({'default:cactus', 'farming:seed_wheat', 'farming:seed_cotton', 'default:sign_wall', 'default:apple'}) do
+for _,v in ipairs({'default:cactus', 'farming:seed_wheat', 'farming:seed_cotton', 'default:sign_wall', 'default:fence_wood', 'default:apple'}) do
 	on_place(v,0);
 end
 
@@ -279,7 +282,7 @@ local function bucket_on_use(itemstack, user, pointed_thing)
 		skyblock.feats.bucket_on_use(itemstack, user, pointed_thing)
 		-- end track bucket feats
 	
-		minetest.env:add_node(pointed_thing.under, {name='air'})
+		minetest.add_node(pointed_thing.under, {name='air'})
 		return {name=liquid.itemname}
 	end
 end
@@ -310,17 +313,17 @@ local function bucket_water_on_use(itemstack, user, pointed_thing)
 		local pos = pointed_thing.under
 		if range and (spawn==nil
 			or (pos.x-spawn.x > range or pos.x-spawn.x < range*-1) 
-			or (pos.y-spawn.y > range/2 or pos.y-spawn.y < range*-1/2) 
+			-- or (pos.y-spawn.y > range/2 or pos.y-spawn.y < range*-1/2) 
 			or (pos.z-spawn.z > range or pos.z-spawn.z < range*-1)) then
 			minetest.chat_send_player(player_name, 'Cannot use bucket so far from your home.')
 			return
 		end
 		-- end anti-grief change
 
-		minetest.env:add_node(pointed_thing.above, {name='default:water_source'})
+		minetest.add_node(pointed_thing.above, {name='default:water_source'})
 	elseif n.name ~= 'default:water_source' then
 		-- It's a liquid
-		minetest.env:add_node(pointed_thing.under, {name='default:water_source'})
+		minetest.add_node(pointed_thing.under, {name='default:water_source'})
 	end
 
 	-- begin track bucket feats
@@ -364,10 +367,10 @@ local function bucket_lava_on_use(itemstack, user, pointed_thing)
 		end
 		-- end anti-grief change
 
-		minetest.env:add_node(pointed_thing.above, {name='default:lava_source'})
+		minetest.add_node(pointed_thing.above, {name='default:lava_source'})
 	elseif n.name ~= 'default:lava_source' then
 		-- It's a liquid
-		minetest.env:add_node(pointed_thing.under, {name='default:lava_source'})
+		minetest.add_node(pointed_thing.under, {name='default:lava_source'})
 	end
 
 	-- begin track bucket feats
@@ -386,7 +389,7 @@ for _, material in pairs({"wood", "stone", "steel", "bronze", "mese", "diamond"}
 	local old_use = minetest.registered_items["farming:hoe_" .. material].on_use
 	minetest.override_item("farming:hoe_" .. material, {
 		on_use = function(itemstack, user, pointed_thing)
-			if not minetest.is_protected(pointed_thing.above, user:get_player_name()) then
+			if pointed_thing.above and not minetest.is_protected(pointed_thing.above, user:get_player_name()) then
 				old_use(itemstack, user, pointed_thing)
 			end
 		end
